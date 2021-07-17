@@ -43,6 +43,14 @@
         <p>So early in your writing project, familiarize yourself with the components of a paragraph detailed in <xref ref="topic-paragraphs" />.</p>
     </section>
 
+    <section xml:id="overview-blocks">
+        <title>Blocks</title>
+        <idx>blocks</idx>
+        <idx><h>environments</h><see>blocks</see></idx>
+
+        <p>Besides paragraphs (<xref ref="overview-paragraphs"/>) the most common object to include in a division is what we informally refer to as a <term>block</term>.  These are self-contained units of text, almost always set-off visually, and likely with a number and a title.  If you know <latex/>, you may be in the habit of calling these <term>environments</term>.  Mathematical results are one example, and you can start at <xref ref="overview-math-results"/> to learn more.  There are others that are more general-purpose, such as <tag>remark</tag> and <tag>example</tag>.  While fundamentally different from these blocks that are textual with reflowable lines, objects like <tag>figure</tag> and <tag>table</tag> (<xref ref="overview-figures-tables"/>) or <tag>program</tag> and <tag>console</tag> (<xref ref="overview-programs"/>) are blocks, even if their contents are more rigid or spatial.  For a more precise description, see <xref ref="topic-blocks"/>.</p>
+    </section>
+
     <section xml:id="overview-cross-references">
         <title>Cross-References</title>
         <idx>cross-reference</idx>
@@ -151,7 +159,7 @@
             </li>
             <li>
                 <title>Project</title>
-                <p>A <tag>project</tag> is a bit different than the prior situations, since this element is structured with <tag>task</tag>.  But it has many common features, such as allowing optional <tag>title</tag>, <tag>hint</tag>, <tag>answer</tag>, <tag>solution</tag>.</p>
+                <p>A <tag>project</tag> is similar to an inline exercise, other than the type name and the fact that it can run on a separate counter from theorems, figures, etc. (When running on a separate counter, the same counter is used for <tag>activity</tag>, <tag>exploration</tag>, and <tag>investigation</tag>.)</p>
             </li>
         </dl></p>
 
@@ -367,7 +375,7 @@
         <title>Front Matter</title>
         <idx>front matter</idx>
 
-        <p>In the beginning of your <tag>book</tag> or <tag>article</tag> you can have a <tag>frontmatter</tag><idx>front matter</idx> element that contains various items that would precede your first <tag>chapter</tag> or <tag>section</tag> (respectively).  Possibilities include <tag>titlepage</tag>, <tag>colophon</tag>, <tag>biography</tag>, <tag>abstract</tag>, <tag>dedication</tag>, <tag>acknowledgment</tag>, <tag>foreword</tag>, and <tag>preface</tag>.  Some of these may be duplicated (e.g., several prefaces for multiple editions), many of these items are restricted to books (e.g., a foreword), and some items are restricted to articles (e.g., an abstract).  The schema (<xref ref="schema"/>) will help you place them in the right order in your source.  See <xref ref="topic-front-matter"/> for details.</p>
+        <p>In the beginning of your <tag>book</tag> or <tag>article</tag> you can have a <tag>frontmatter</tag><idx>front matter</idx> element that contains various items that would precede your first <tag>chapter</tag> or <tag>section</tag> (respectively).  Possibilities include <tag>titlepage</tag>, <tag>colophon</tag>, <tag>biography</tag>, <tag>abstract</tag>, <tag>dedication</tag>, <tag>acknowledgement</tag>, <tag>foreword</tag>, and <tag>preface</tag>.  Some of these may be duplicated (e.g., several prefaces for multiple editions), many of these items are restricted to books (e.g., a foreword), and some items are restricted to articles (e.g., an abstract).  The schema (<xref ref="schema"/>) will help you place them in the right order in your source.  See <xref ref="topic-front-matter"/> for details.</p>
 
         <p>The <tag>frontmatter</tag> is also employed in other types of documents, such as a <tag>slideshow</tag>, in similar, but not identical, ways.</p>
     </section>
@@ -376,7 +384,7 @@
         <title>Back Matter</title>
         <idx>back matter</idx>
 
-        <p>Similar to front matter, there is material you might wish to include after your book's final <tag>chapter</tag> or your article's final <tag>section</tag>.  Possibilities to place in a <tag>backmatter</tag><idx>back matter</idx> include <tag>appendix</tag>, <tag>references</tag>, <tag>glossary</tag>, <tag>solutions</tag>, <tag>index</tag>, and <tag>colophon</tag>.  There are empty tags you can place into an appendix to generate lists of notation, or lists of particular elements of your choice, such as a list of figures.  A similar empty element actually generates the index, <tag>index-list</tag>, but you will almost always want to place it into the <tag>index</tag> division.  See <xref ref="topic-back-matter"/> for details on the back matter generally, and <xref ref="topic-automatic-lists"/> for more on automatic lists.</p>
+        <p>Similar to front matter, there is material you might wish to include after your book's final <tag>chapter</tag> or your article's final <tag>section</tag>.  Possibilities to place in a <tag>backmatter</tag><idx>back matter</idx> include <tag>appendix</tag>, <tag>references</tag>, <tag>glossary</tag>, <tag>solutions</tag>, <tag>index</tag>, and <tag>colophon</tag>.  There are empty tags you can place into an appendix to generate lists of notation, or lists of particular elements of your choice, such as a list of figures.  A similar empty element actually generates the index, <tag>index-list</tag>, but you will almost always want to place it into the <tag>index</tag> division.  See <xref ref="topic-back-matter"/> for details on the back matter generally.  Also, be sure to read about the powerful and flexible automatic list feature (<xref ref="topic-automatic-lists"/>), which is not restricted to just the back matter.</p>
     </section>
 
     <section xml:id="overview-index-notation">
@@ -393,16 +401,16 @@
         <p>See <xref ref="topic-index"/> for more details and the finer points of creating index entries.</p>
 
         <p>A similar device is used to create a list of notation for a technical (mathematical) work.
-        Place a <tag>notation</tag> element as close as possible to the place where notation is first introduced.  If you use the <tag>definition</tag> tag for your definitions, then this is a very natural place to also introduce notation.  Inside of <tag>notation</tag> use the <tag>usage</tag> tag to include a short example of the notation in use.  This will be treated as mathematics, so imagine that it will be wrapped in an <tag>m</tag> tag and use <latex/> syntax.  The <tag>description</tag> tag should contain a very short description in words of what the notation is for.  So <q>center of a group</q> would be a good description to accompany the usage <q><m>Z(G)</m>.</q></p>
+        Place a <tag>notation</tag> element as close as possible to the place where notation is first introduced.  If you use the <tag>definition</tag> tag for your definitions, then this is a very natural place to also introduce notation.  Inside of <tag>notation</tag> use the <tag>usage</tag> tag to include a short example of the notation in use, wrapped in an <tag>m</tag> tag and use <latex/> syntax (as usual).  The <tag>description</tag> tag should contain a very short description in words of what the notation is for.  So <q>center of a group</q> would be a good description to accompany the usage <q><m>Z(G)</m>.</q></p>
 
         <p>See <xref ref="topic-notation"/> for more details and the finer points of creating notation entries.</p>
     </section>
 
     <section xml:id="overview-webwork">
-        <title><webwork /> Exercises</title>
-        <idx><h><webwork /></h><h><webwork /> exercise</h></idx>
+        <title><webwork/> Exercises</title>
+        <idx><h><webwork/></h><h><webwork/> exercise</h></idx>
 
-        <p>It is possible to author <webwork /> automated homework problems<idx><h><webwork /></h><h><webwork /> exercise</h></idx> directly within your source.  A static version will be rendered in your <latex />/PDF/print output, and a <q>live</q> version will be rendered into HTML output (though a student is not able to authenticate against a course).  However, you can also extract <em>all</em> of the <webwork /> questions from a textbook into a single archive suitable for uploading into a traditional <webwork /> server.  This is a big topic, so see the dedicated <xref ref="webwork-author" /> for details.</p>
+        <p>It is possible to author <webwork/> automated homework problems<idx><h><webwork /></h><h><webwork /> exercise</h></idx> directly within your source.  A static version will be rendered in your <latex />/PDF/print output, and a <q>live</q> version will be rendered into HTML output (though a student is not able to authenticate against a course).  However, you can also extract <em>all</em> of the <webwork/> questions from a textbook into a single archive suitable for uploading into a traditional <webwork/> server.  This is a big topic, so see the dedicated <xref ref="webwork-author" /> for details.</p>
     </section>
 
     <section xml:id="overview-url">

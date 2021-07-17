@@ -393,6 +393,17 @@ along with PreTeXt.  If not, see <http://www.gnu.org/licenses/>.
     </pretext>
 </xsl:template>
 
+<!-- 2021-07-02 wrap notation/usage in "m" if not present -->
+<xsl:template match="notation/usage[not(m)]" mode="assembly">
+    <!-- duplicate "usage" w/ attributes, insert "m" as repair -->
+    <usage>
+        <xsl:apply-templates select="@*" mode="assembly"/>
+        <m>
+            <xsl:apply-templates select="node()|@*" mode="assembly"/>
+        </m>
+    </usage>
+</xsl:template>
+
 <!-- ######## -->
 <!-- Warnings -->
 <!-- ######## -->
@@ -401,7 +412,7 @@ along with PreTeXt.  If not, see <http://www.gnu.org/licenses/>.
 <!-- and/or temporary/experimental features        -->
 <xsl:template name="assembly-warnings">
     <xsl:if test="$original/*[not(self::docinfo)]//webwork/node() and not($b-doing-webwork-assembly or $b-extracting-pg)">
-        <xsl:message>PTX:WARNING: Your document has WeBworK exercises,</xsl:message>
+        <xsl:message>PTX:WARNING: Your document has WeBWorK exercises,</xsl:message>
         <xsl:message>             but your publisher file does not indicate the file</xsl:message>
         <xsl:message>             of problem representations created by a WeBWorK server.</xsl:message>
         <xsl:message>             Exercises will have a small informative message instead</xsl:message>

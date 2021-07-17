@@ -820,6 +820,8 @@
 
         <p><c>demonstration</c> is slated for removal or an overhaul, and so is in the <xref ref="badbank" text="title" />.  Avoid using them for now.</p>
 
+        <!-- BlockText is enforced via XSL for assemblage, keep synchronized -->
+        <!-- BlockText is enforced via XSL for Aside, keep synchronized      -->
         <fragment xml:id="block">
             <title>Blocks</title>
             <code>
@@ -930,6 +932,7 @@
             Url =
                 element url {
                     attribute href {text},
+                    attribute visual {text}?,
                     TextShort
                 }
             Xref =
@@ -945,7 +948,7 @@
                 }
             Notation =
                 element notation {
-                    element usage {text},
+                    element usage {MathInline},
                     element description {
                         TextShort
                     }
@@ -1302,12 +1305,13 @@
 
         <p>An aside is a deviation from the narrative, and might physically move in the presentation (say, to a margin, or to a knowl).  <c>biographical</c> and <c>historical</c> may be further developed.</p>
 
+        <!-- BlockText is enforced via XSL for Aside, keep synchronized -->
         <fragment xml:id="aside">
             <title>Asides, and similar</title>
             <code>
             AsideLike =
                 MetaDataTitleOptional,
-                BlockStatement+
+                BlockText+
             Aside =
                 element aside {AsideLike} |
                 element biographical {AsideLike} |
@@ -1321,6 +1325,7 @@
 
         <p>Since an <c>assemblage</c> is meant to accumulate significant content (as a review or summary, or for initial presentation) lists are allowed here, an exception to their restriction to paragraphs.  We are also mildly restrictive about what can be content here<mdash/>in particular blocks are excluded, despite not strictly being blocks themselves.</p>
 
+        <!-- BlockText + SBS is enforced via XSL, keep synchronized -->
         <fragment xml:id="assemblage">
             <title>Assemblages</title>
             <code>
@@ -1454,8 +1459,6 @@
 
         <p>A group of side-by-sides is designed to stack vertically with common controls on widths, etc.  Its implementation is entirely experimental right now, even if we are relatively confident of the markup.</p>
 
-        <p>For <webwork/> the NoCaption variant allows <c>Tabular</c> and <c>ImageWW</c>.  This may change if these two items are liberated from <tag>sidebyside</tag>.  Presently, there should only be a single item inside a <c>sidebyside</c> inside a <c>webwork</c>, but we do not have a rule for that.</p>
-
         <fragment xml:id="sidebyside">
             <title>Side-by-side layouts</title>
             <code>
@@ -1501,7 +1504,6 @@
                         Poem |
                         Tabular |
                         Image |
-                        ImageWW |
                         Video |
                         Program |
                         Console |
@@ -1564,7 +1566,11 @@
                 element image {
                     attribute pg-name {text}?,
                     attribute width {text}?,
-                    element description {(TextShort | WWVariable)*}?
+                    element description {(TextShort | WWVariable)*}?,
+                    element latex-image {
+                        attribute syntax {"PGtikz"},
+                        text
+                    }?
                 }
             </code>
         </fragment>
@@ -1629,15 +1635,19 @@
                     attribute end {xsd:integer}?,
                     attribute play-at {"embed" | "popout" | "select"}?,
                     attribute preview {"default" | "generic" | text}?,
-                    (AttributesSourceFile | AttributesYouTube |
-                     AttributesYouTubePlaylist)
+                    (AttributesSourceFile | AttributesNetwork | AttributesYouTube |
+                     AttributesYouTubePlaylist | AttributesVimeo)
                 }
             AttributesSourceFile =
                 attribute source {text}
+            AttributesNetwork =
+                attribute href {text}
             AttributesYouTube =
                 attribute youtube {text}
             AttributesYouTubePlaylist =
                 attribute youtubeplaylist {text}
+            AttributesVimeo =
+                attribute vimeo {text}
             </code>
         </fragment>
     </section>
@@ -1812,6 +1822,8 @@
                     (
                         (StatementExerciseWW, HintWW?, SolutionWW?)
                     |
+                        (IntroductionText?, TaskWW+, ConclusionText?)
+                    |
                         element stage {
                             Title?,
                             StatementExerciseWW,
@@ -1828,6 +1840,14 @@
             StatementExerciseWW =
                 element statement {
                     (BlockStatementWW|WWInstruction)+
+                }
+            TaskWW =
+                element task {
+                    MetaDataTitleOptional,
+                    (
+                        (StatementExerciseWW, HintWW?, SolutionWW?) |
+                        (IntroductionText?, TaskWW+, ConclusionText?)
+                    )
                 }
             WWMacros =
                 element pg-macros {
@@ -2088,7 +2108,7 @@
                 }
             BookFrontMatter = element frontmatter {
                     MetaDataTitleOptional,
-                    TitlePage?,
+                    TitlePage,
                     ColophonFront?,
                     Biography*,
                     Dedication?,
@@ -2301,7 +2321,10 @@
                     element package {text}*
                 }
             Configuration |=
-                element latex-image-preamble {text}
+                element latex-image-preamble {
+                    attribute syntax {"PGtikz"}?,
+                    text
+                }
             Configuration |=
                 element asymptote-preamble {text}
             </code>

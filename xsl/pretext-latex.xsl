@@ -1725,7 +1725,10 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <xsl:text>%% Package for precise image placement (for logos on pages)&#xa;</xsl:text>
         <xsl:text>\usepackage{eso-pic}&#xa;</xsl:text>
     </xsl:if>
-    <xsl:if test="$document-root//notation|$document-root//list-of">
+    <!-- Lists are built as "longtable" so they span multiple pages    -->
+    <!-- and get "continuation" footers, for example.  It is the       -->
+    <!-- "list generator" element which provokes the package inclusion -->
+    <xsl:if test="$document-root//notation-list|$document-root//list-of">
         <xsl:text>%% Package for tables spanning several pages&#xa;</xsl:text>
         <xsl:text>\usepackage{longtable}&#xa;</xsl:text>
     </xsl:if>
@@ -1785,11 +1788,9 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <xsl:text>\usepackage{showkeys}&#xa;</xsl:text>
         <xsl:text>\usepackage[letter,cam,center,pdflatex]{crop}&#xa;</xsl:text>
     </xsl:if>
-    <xsl:if test="$docinfo/latex-image-preamble">
+    <xsl:if test="$latex-image-preamble">
         <xsl:text>%% Graphics Preamble Entries&#xa;</xsl:text>
-        <xsl:call-template name="sanitize-text">
-            <xsl:with-param name="text" select="$docinfo/latex-image-preamble" />
-        </xsl:call-template>
+        <xsl:value-of select="$latex-image-preamble"/>
     </xsl:if>
     <xsl:text>%% If tikz has been loaded, replace ampersand with \amp macro&#xa;</xsl:text>
     <xsl:if test="$document-root//latex-image">
@@ -4518,11 +4519,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
 </xsl:template>
 
 <xsl:template match="notation" mode="backmatter">
-    <xsl:text>\(</xsl:text>
-    <!-- "usage" should be raw latex, so -->
-    <!-- should avoid text processing    -->
-    <xsl:value-of select="usage" />
-    <xsl:text>\)</xsl:text>
+    <!-- Process *exactly* one "m" element -->
+    <xsl:apply-templates select="usage/m[1]"/>
     <xsl:text>&amp;</xsl:text>
     <xsl:apply-templates select="description" />
     <xsl:text>&amp;</xsl:text>
@@ -5523,6 +5521,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <xsl:when test="&PROJECT-FILTER;">
             <xsl:value-of select="local-name(.)" />
         </xsl:when>
+        <!-- must now be an "exercise" -->
         <xsl:when test="&INLINE-EXERCISE-FILTER;">
             <xsl:text>inlineexercise</xsl:text>
         </xsl:when>
@@ -5554,7 +5553,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     <!-- Four types of exercises, we use local variables when we -->
     <!-- need to condition.  Exactly one of these is true, which -->
     <!-- is important in the more complicated booleans below.    -->
-    <xsl:variable name="inline" select="boolean(&INLINE-EXERCISE-FILTER;)"/>
+    <xsl:variable name="inline" select="self::exercise and boolean(&INLINE-EXERCISE-FILTER;)"/>
     <xsl:variable name="project" select="boolean(&PROJECT-FILTER;)"/>
     <xsl:variable name="divisional" select="boolean(ancestor::exercises)"/>
     <xsl:variable name="worksheet" select="boolean(ancestor::worksheet)"/>
@@ -5680,6 +5679,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
             <xsl:value-of select="local-name(.)" />
             <xsl:text>solution</xsl:text>
         </xsl:when>
+        <!-- must now be an "exercise" -->
         <xsl:when test="&INLINE-EXERCISE-FILTER;">
             <xsl:text>inlinesolution</xsl:text>
         </xsl:when>
@@ -5825,7 +5825,14 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     <!-- the original source, and not the enhanced source, and -->
     <!-- causes the relative file name to resolve according    -->
     <!-- to the correct location.   Experiments with the       -->
-    <xsl:variable name="filename" select="concat(concat('problems/mom-', myopenmath/@problem), '.xml')" />
+    <xsl:variable name="filename">
+        <xsl:if test="$b-managed-directories">
+            <xsl:value-of select="$generated-directory"/>
+        </xsl:if>
+        <xsl:text>problems/mom-</xsl:text>
+        <xsl:value-of select="myopenmath/@problem"/>
+        <xsl:text>.xml</xsl:text>
+    </xsl:variable>
     <xsl:apply-templates select="document($filename, $original)/myopenmath" mode="exercise-components">
         <xsl:with-param name="b-original" select="$b-original" />
         <xsl:with-param name="purpose" select="$purpose" />
@@ -6023,7 +6030,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
 <!-- We make sure a nested list has content, before starting (and    -->
 <!-- later ending) a list to hold the tasks.  Only terminal tasks    -->
 <!-- have statement|hint|answer|solution.                            -->
-<xsl:template match="exercise[task]|project[task]|activity[task]|exploration[task]|investigation[task]|example[task]|question[task]|problem[task]|task[task]" mode="exercise-components">
+<xsl:template match="exercise[task]|webwork-reps/static[task]|project[task]|activity[task]|exploration[task]|investigation[task]|example[task]|question[task]|problem[task]|task[task]" mode="exercise-components">
     <xsl:param name="b-original" />
     <xsl:param name="purpose" />
     <xsl:param name="b-component-heading"/>
@@ -6150,7 +6157,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
 <!-- hint|answer|solution that might appear somewhere else.  Since there     -->
 <!-- could be multiple targets, we use the heuristic of choosing main matter -->
 <!-- over back matter.  Unclear what happens if there are multiple targets.  -->
-<xsl:template match="exercise|webwork-reps/static|webwork-reps/static/stage|myopenmath|&EXAMPLE-LIKE;|&PROJECT-LIKE;|task[not(task)]" mode="exercise-components">
+<xsl:template match="exercise|webwork-reps/static[not(task)]|webwork-reps/static/stage|myopenmath|&EXAMPLE-LIKE;|&PROJECT-LIKE;|task[not(task)]" mode="exercise-components">
     <xsl:param name="b-original" />
     <xsl:param name="purpose" />
     <xsl:param name="b-component-heading"/>
@@ -6441,7 +6448,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     <xsl:text>}</xsl:text>
     <xsl:apply-templates select="." mode="block-options"/>
     <xsl:text>%&#xa;</xsl:text>
-    <xsl:apply-templates select="p|&FIGURE-LIKE;|sidebyside" />
+    <!-- Coordinate with schema, since we enforce it here -->
+    <xsl:apply-templates select="p|blockquote|pre|image|video|program|console|tabular"/>
     <xsl:text>\end{</xsl:text>
     <xsl:value-of select="local-name(.)" />
     <xsl:text>}&#xa;</xsl:text>
@@ -6458,7 +6466,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     <xsl:text>}</xsl:text>
     <xsl:apply-templates select="." mode="block-options"/>
     <xsl:text>%&#xa;</xsl:text>
-    <xsl:apply-templates select="p|blockquote|pre|sidebyside|sbsgroup" />
+    <!-- Coordinate with schema, since we enforce it here -->
+    <xsl:apply-templates select="p|blockquote|pre|image|video|program|console|tabular|sidebyside|sbsgroup" />
     <xsl:text>\end{</xsl:text>
     <xsl:value-of select="local-name(.)" />
     <xsl:text>}&#xa;</xsl:text>
@@ -7167,7 +7176,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
 <!-- Eventually match on all interactives                            -->
 <!-- NB: baseurl is assumed to have a trailing slash                 -->
 
-<xsl:template match="audio[@source]|video[@source]|interactive" mode="static-url">
+<xsl:template match="audio[@source|@href]|video[@source|@href]|interactive" mode="static-url">
     <xsl:value-of select="$baseurl"/>
     <xsl:apply-templates select="." mode="standalone-filename" />
 </xsl:template>
@@ -7215,6 +7224,9 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <!-- has @preview -->
         <xsl:when test="@preview">
             <xsl:text>\includegraphics[width=0.80\linewidth,height=\qrsize,keepaspectratio]{</xsl:text>
+            <xsl:if test="$b-managed-directories">
+                <xsl:value-of select="$external-directory"/>
+            </xsl:if>
             <xsl:value-of select="@preview" />
             <xsl:text>}</xsl:text>
         </xsl:when>
@@ -7225,8 +7237,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <!-- nothing specified, look for scraped via visible-id -->
         <xsl:when test="@youtube">
             <xsl:text>\includegraphics[width=0.80\linewidth,height=\qrsize,keepaspectratio]{</xsl:text>
-            <xsl:value-of select="$generated-image-directory"/>
-            <xsl:if test="$b-managed-generated-images">
+            <xsl:value-of select="$generated-directory"/>
+            <xsl:if test="$b-managed-directories">
                 <xsl:text>youtube/</xsl:text>
             </xsl:if>
             <xsl:apply-templates select="." mode="visible-id" />
@@ -7244,6 +7256,9 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <!-- has @preview -->
         <xsl:when test="@preview">
             <xsl:text>\includegraphics[width=0.80\linewidth,height=\qrsize,keepaspectratio]{</xsl:text>
+            <xsl:if test="$b-managed-directories">
+                <xsl:value-of select="$external-directory"/>
+            </xsl:if>
             <xsl:value-of select="@preview" />
             <xsl:text>}</xsl:text>
         </xsl:when>
@@ -7251,8 +7266,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <!-- Critical: coordinate with "extract-interactive.xsl" -->
         <xsl:otherwise>
             <xsl:variable name="default-preview-image">
-                <xsl:value-of select="$generated-image-directory"/>
-                <xsl:if test="$b-managed-generated-images">
+                <xsl:value-of select="$generated-directory"/>
+                <xsl:if test="$b-managed-directories">
                     <xsl:text>preview/</xsl:text>
                 </xsl:if>
                 <xsl:apply-templates select="." mode="visible-id" />
@@ -7271,7 +7286,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     </xsl:choose>
 </xsl:template>
 
-<xsl:template match="audio[@source]|video[@source]" mode="static-caption">
+<xsl:template match="audio[@source|@href]|video[@source|@href]" mode="static-caption">
     <xsl:choose>
         <!-- author-supplied override -->
         <xsl:when test="caption">
@@ -8872,7 +8887,7 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     </xsl:variable>
     <xsl:text>\includegraphics[width=\linewidth]</xsl:text>
     <xsl:text>{</xsl:text>
-    <xsl:value-of select="$external-image-directory"/>
+    <xsl:value-of select="$external-directory"/>
     <xsl:value-of select="@source"/>
     <xsl:if test="not($extension)">
         <xsl:text>.pdf&#xa;</xsl:text>
@@ -8885,8 +8900,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
 <xsl:template match="image[asymptote]" mode="image-inclusion">
     <!-- need image filename in two different scenarios -->
     <xsl:variable name="image-file-name">
-        <xsl:value-of select="$generated-image-directory"/>
-        <xsl:if test="$b-managed-generated-images">
+        <xsl:value-of select="$generated-directory"/>
+        <xsl:if test="$b-managed-directories">
             <xsl:text>asymptote/</xsl:text>
         </xsl:if>
         <xsl:apply-templates select="." mode="visible-id" />
@@ -8896,8 +8911,8 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
       <xsl:when test="$b-asymptote-links">
         <xsl:variable name="image-html-url">
             <xsl:value-of select="$baseurl"/>
-            <xsl:value-of select="$generated-image-directory"/>
-            <xsl:if test="$b-managed-generated-images">
+            <xsl:value-of select="$generated-directory"/>
+            <xsl:if test="$b-managed-directories">
                 <xsl:text>asymptote/</xsl:text>
             </xsl:if>
             <xsl:apply-templates select="." mode="visible-id" />
@@ -8928,24 +8943,24 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
 <!-- PNGs are fallback for 3D     -->
 <xsl:template match="image[sageplot]" mode="image-inclusion">
     <xsl:text>\IfFileExists{</xsl:text>
-    <xsl:value-of select="$generated-image-directory"/>
-    <xsl:if test="$b-managed-generated-images">
+    <xsl:value-of select="$generated-directory"/>
+    <xsl:if test="$b-managed-directories">
         <xsl:text>sageplot/</xsl:text>
     </xsl:if>
     <xsl:apply-templates select="." mode="visible-id" />
     <xsl:text>.pdf}%&#xa;</xsl:text>
     <xsl:text>{\includegraphics[width=\linewidth]</xsl:text>
     <xsl:text>{</xsl:text>
-    <xsl:value-of select="$generated-image-directory"/>
-    <xsl:if test="$b-managed-generated-images">
+    <xsl:value-of select="$generated-directory"/>
+    <xsl:if test="$b-managed-directories">
         <xsl:text>sageplot/</xsl:text>
     </xsl:if>
     <xsl:apply-templates select="." mode="visible-id" />
     <xsl:text>.pdf}}%&#xa;</xsl:text>
     <xsl:text>{\includegraphics[width=\linewidth]</xsl:text>
     <xsl:text>{</xsl:text>
-    <xsl:value-of select="$generated-image-directory"/>
-    <xsl:if test="$b-managed-generated-images">
+    <xsl:value-of select="$generated-directory"/>
+    <xsl:if test="$b-managed-directories">
         <xsl:text>sageplot/</xsl:text>
     </xsl:if>
     <xsl:apply-templates select="." mode="visible-id" />
@@ -8995,11 +9010,14 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     </xsl:call-template>
 </xsl:template>
 
-<!-- This is producing TikZ code, so will not be effective in any sort    -->
-<!-- of "LaTeX image" scenario.  Thus the experimental designation above. -->
+<!-- This is producing TikZ code, so will not be effective in all poassible -->
+<!-- "LaTeX image" scenarios.  Thus the experimental designation above.     -->
 <xsl:template match="label">
     <xsl:text>\node [</xsl:text>
-    <xsl:value-of select="@direction"/>
+    <xsl:apply-templates select="@direction" mode="tikz-direction"/>
+    <xsl:text>=</xsl:text>
+    <!-- Always an offset, default is 4pt, about a "normal space" -->
+    <xsl:apply-templates select="." mode="get-label-offset"/>
     <xsl:text>] at (</xsl:text>
     <xsl:value-of select="@location"/>
     <xsl:text>) {</xsl:text>
@@ -9007,6 +9025,84 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
     <!-- like contents of a paragraph     -->
     <xsl:apply-templates/>
     <xsl:text>};</xsl:text>
+</xsl:template>
+
+<!-- We translate PreTeXt directions from an 8-wind compass rose into -->
+<!-- TikZ shorthand for anchors.  TikZ places a node by placing the   -->
+<!-- node's center onto a specific point.  Instead, you can specify   -->
+<!-- a location around the perimeter of the node to be an "anchor"    -->
+<!-- instead.  Choosing a "south" anchor would place the label        -->
+<!-- *above* the point.                                               -->
+<!--                                                                  -->
+<!-- 1.  PreTeXt uses compass directions, which we can refine later   -->
+<!-- into more (sub)directions.                                       -->
+<!--                                                                  -->
+<!-- 2.  TikZ shorthand (e.g. "below right") allow the specification  -->
+<!-- of an offset (e.g. below right=20) which we should find useful   -->
+<!-- internally, and perhaps useful as author markup later.           -->
+<xsl:template match="@direction" mode="tikz-direction">
+    <xsl:choose>
+        <xsl:when test=". = 'north'">
+            <xsl:text>above</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'northeast'">
+            <xsl:text>above right</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'east'">
+            <xsl:text>right</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'southeast'">
+            <xsl:text>below right</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'south'">
+            <xsl:text>below</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'southwest'">
+            <xsl:text>below left</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'west'">
+            <xsl:text>left</xsl:text>
+        </xsl:when>
+        <xsl:when test=". = 'northwest'">
+            <xsl:text>above left</xsl:text>
+        </xsl:when>
+        <!-- this will allow tikz to continue, but perhaps incorrectly -->
+        <!-- schema should catch incorrect values                      -->
+        <xsl:otherwise>
+            <xsl:text>above</xsl:text>
+            <xsl:message>PTX:ERROR:   a label @direction ("<xsl:value-of select="."/>") is not recognized, using "above" as a default</xsl:message>
+            <xsl:apply-templates select="." mode="location-report" />
+        </xsl:otherwise>
+    </xsl:choose>
+</xsl:template>
+
+<!-- TikZ's "inner sep" functions like our offset but is a           -->
+<!-- horizontal and vertical shift, while the TikZ offset with the   -->
+<!-- anchor mechanism is a straight line distance.                   -->
+<!-- Section 11.8 at                                                 -->
+<!-- https://stuff.mit.edu/afs/athena/contrib/                       -->
+<!-- tex-contrib/beamer/pgf-1.01/doc/generic/pgf/                    -->
+<!-- version-for-tex4ht/en/pgfmanualse11.html                        -->
+<!-- says:                                                           -->
+<!-- "An additional (invisible) separation space of <dimension> will -->
+<!-- be added inside the shape, between the text and the shape’s     -->
+<!-- background path. The effect is as if you had added appropriate  -->
+<!-- horizontal and vertical skips at the beginning and end of the   -->
+<!-- text to make it a bit “larger.” The default inner sep is the    -->
+<!-- size of a normal space."                                        -->
+<!--                                                                 -->
+<!-- We use a default of 4pt, and this template is employed for      -->
+<!-- consistency, such as in the more elaborate template for tactile -->
+<!-- versions, located  elsewhere.                                   -->
+<xsl:template match="label" mode="get-label-offset">
+    <xsl:choose>
+        <xsl:when test="@offset">
+            <xsl:value-of select="@offset"/>
+        </xsl:when>
+        <xsl:otherwise>
+            <xsl:text>4pt</xsl:text>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- EXPERIMENTAL -->

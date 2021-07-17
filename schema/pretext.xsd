@@ -393,7 +393,7 @@
         <xs:complexType>
           <xs:sequence>
             <xs:group ref="MetaDataTitleOptional"/>
-            <xs:element minOccurs="0" ref="titlepage"/>
+            <xs:element ref="titlepage"/>
             <xs:group minOccurs="0" ref="ColophonFront"/>
             <xs:element minOccurs="0" maxOccurs="unbounded" ref="biography"/>
             <xs:element minOccurs="0" ref="dedication"/>
@@ -1350,7 +1350,7 @@
         </xs:sequence>
         <xs:sequence>
           <xs:group minOccurs="0" ref="IntroductionStatement"/>
-          <xs:element maxOccurs="unbounded" ref="task"/>
+          <xs:group maxOccurs="unbounded" ref="Task"/>
           <xs:group minOccurs="0" ref="ConclusionStatement"/>
         </xs:sequence>
       </xs:choice>
@@ -1383,7 +1383,7 @@
             </xs:sequence>
             <xs:sequence>
               <xs:group minOccurs="0" ref="IntroductionStatement"/>
-              <xs:element maxOccurs="unbounded" ref="task"/>
+              <xs:group maxOccurs="unbounded" ref="Task"/>
               <xs:group minOccurs="0" ref="ConclusionStatement"/>
             </xs:sequence>
           </xs:choice>
@@ -1405,28 +1405,32 @@
   <xs:element name="investigation" type="ProjectLike"/>
   <xs:element name="exploration" type="ProjectLike"/>
   <xs:element name="project" type="ProjectLike"/>
-  <xs:element name="task">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:group ref="MetaDataTitleOptional"/>
-        <xs:choice>
-          <xs:group maxOccurs="unbounded" ref="BlockStatement"/>
+  <xs:group name="Task">
+    <xs:sequence>
+      <xs:element name="task">
+        <xs:complexType>
           <xs:sequence>
-            <xs:group ref="Statement"/>
-            <xs:group minOccurs="0" maxOccurs="unbounded" ref="Hint"/>
-            <xs:element minOccurs="0" maxOccurs="unbounded" ref="answer"/>
-            <xs:group minOccurs="0" maxOccurs="unbounded" ref="Solution"/>
+            <xs:group ref="MetaDataTitleOptional"/>
+            <xs:choice>
+              <xs:group maxOccurs="unbounded" ref="BlockStatement"/>
+              <xs:sequence>
+                <xs:group ref="Statement"/>
+                <xs:group minOccurs="0" maxOccurs="unbounded" ref="Hint"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="answer"/>
+                <xs:group minOccurs="0" maxOccurs="unbounded" ref="Solution"/>
+              </xs:sequence>
+              <xs:sequence>
+                <xs:group minOccurs="0" ref="IntroductionStatement"/>
+                <xs:group maxOccurs="unbounded" ref="Task"/>
+                <xs:group minOccurs="0" ref="ConclusionStatement"/>
+              </xs:sequence>
+            </xs:choice>
           </xs:sequence>
-          <xs:sequence>
-            <xs:group minOccurs="0" ref="IntroductionStatement"/>
-            <xs:element maxOccurs="unbounded" ref="task"/>
-            <xs:group minOccurs="0" ref="ConclusionStatement"/>
-          </xs:sequence>
-        </xs:choice>
-      </xs:sequence>
-      <xs:attributeGroup ref="MetaDataTitleOptional"/>
-    </xs:complexType>
-  </xs:element>
+          <xs:attributeGroup ref="MetaDataTitleOptional"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
   <xs:complexType name="RemarkLike">
     <xs:sequence>
       <xs:group ref="MetaDataTitleOptional"/>
@@ -1467,7 +1471,7 @@
   <xs:complexType name="AsideLike">
     <xs:sequence>
       <xs:group ref="MetaDataTitleOptional"/>
-      <xs:group maxOccurs="unbounded" ref="BlockStatement"/>
+      <xs:group maxOccurs="unbounded" ref="BlockText"/>
     </xs:sequence>
     <xs:attributeGroup ref="MetaDataTitleOptional"/>
   </xs:complexType>
@@ -1619,7 +1623,6 @@
             <xs:element ref="poem"/>
             <xs:element ref="tabular"/>
             <xs:group ref="Image"/>
-            <xs:group ref="ImageWW"/>
             <xs:element ref="video"/>
             <xs:element ref="program"/>
             <xs:element ref="console"/>
@@ -1691,7 +1694,7 @@
               </xs:complexType>
             </xs:element>
             <xs:choice>
-              <xs:element ref="latex-image"/>
+              <xs:element name="latex-image" type="xs:string"/>
               <xs:element ref="asymptote"/>
               <xs:element ref="sageplot"/>
             </xs:choice>
@@ -1705,7 +1708,6 @@
       </xs:element>
     </xs:sequence>
   </xs:group>
-  <xs:element name="latex-image" type="xs:string"/>
   <xs:element name="asymptote" type="xs:string"/>
   <xs:element name="sageplot" type="xs:string"/>
   <xs:group name="ImageWW">
@@ -1719,6 +1721,17 @@
                   <xs:group ref="TextShort"/>
                   <xs:element ref="var"/>
                 </xs:choice>
+              </xs:complexType>
+            </xs:element>
+            <xs:element minOccurs="0" name="latex-image">
+              <xs:complexType mixed="true">
+                <xs:attribute name="syntax" use="required">
+                  <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                      <xs:enumeration value="PGtikz"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:attribute>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -1911,18 +1924,26 @@
       </xs:attribute>
       <xs:attribute name="preview"/>
       <xs:attribute name="source"/>
+      <xs:attribute name="href"/>
       <xs:attribute name="youtube"/>
       <xs:attribute name="youtubeplaylist"/>
+      <xs:attribute name="vimeo"/>
     </xs:complexType>
   </xs:element>
   <xs:attributeGroup name="AttributesSourceFile">
     <xs:attribute name="source" use="required"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="AttributesNetwork">
+    <xs:attribute name="href" use="required"/>
   </xs:attributeGroup>
   <xs:attributeGroup name="AttributesYouTube">
     <xs:attribute name="youtube" use="required"/>
   </xs:attributeGroup>
   <xs:attributeGroup name="AttributesYouTubePlaylist">
     <xs:attribute name="youtubeplaylist" use="required"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="AttributesVimeo">
+    <xs:attribute name="vimeo" use="required"/>
   </xs:attributeGroup>
   <xs:group name="ExerciseBody">
     <xs:sequence>
@@ -1974,7 +1995,7 @@
           </xs:sequence>
           <xs:sequence>
             <xs:group minOccurs="0" ref="IntroductionStatement"/>
-            <xs:element maxOccurs="unbounded" ref="task"/>
+            <xs:group maxOccurs="unbounded" ref="Task"/>
             <xs:group minOccurs="0" ref="ConclusionStatement"/>
           </xs:sequence>
           <xs:sequence>
@@ -2208,6 +2229,11 @@
                 <xs:group minOccurs="0" ref="HintWW"/>
                 <xs:group minOccurs="0" ref="SolutionWW"/>
               </xs:sequence>
+              <xs:sequence>
+                <xs:group minOccurs="0" ref="IntroductionText"/>
+                <xs:group maxOccurs="unbounded" ref="TaskWW"/>
+                <xs:group minOccurs="0" ref="ConclusionText"/>
+              </xs:sequence>
               <xs:element maxOccurs="unbounded" ref="stage"/>
             </xs:choice>
           </xs:sequence>
@@ -2245,6 +2271,30 @@
             <xs:group ref="BlockStatementWW"/>
             <xs:element ref="instruction"/>
           </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="TaskWW">
+    <xs:sequence>
+      <xs:element name="task">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group ref="MetaDataTitleOptional"/>
+            <xs:choice>
+              <xs:sequence>
+                <xs:group ref="StatementExerciseWW"/>
+                <xs:group minOccurs="0" ref="HintWW"/>
+                <xs:group minOccurs="0" ref="SolutionWW"/>
+              </xs:sequence>
+              <xs:sequence>
+                <xs:group minOccurs="0" ref="IntroductionText"/>
+                <xs:group maxOccurs="unbounded" ref="TaskWW"/>
+                <xs:group minOccurs="0" ref="ConclusionText"/>
+              </xs:sequence>
+            </xs:choice>
+          </xs:sequence>
+          <xs:attributeGroup ref="MetaDataTitleOptional"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -2683,6 +2733,7 @@
     <xs:complexType mixed="true">
       <xs:group ref="TextShort"/>
       <xs:attribute name="href" use="required"/>
+      <xs:attribute name="visual"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="xref">
@@ -2708,7 +2759,13 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:element name="usage" type="xs:string"/>
+  <xs:element name="usage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="m"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="m">
     <xs:complexType mixed="true">
       <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -3456,7 +3513,17 @@
     </xs:complexType>
   </xs:element>
   <xs:element name="package" type="xs:string"/>
-  <xs:element name="latex-image-preamble" type="xs:string"/>
+  <xs:element name="latex-image-preamble">
+    <xs:complexType mixed="true">
+      <xs:attribute name="syntax">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="PGtikz"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="asymptote-preamble" type="xs:string"/>
   <xs:element name="macros" type="xs:string"/>
   <xs:element name="cross-references">
